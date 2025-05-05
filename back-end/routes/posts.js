@@ -108,6 +108,82 @@ router.patch('/:id/cover', upload.single('cover'), async (req, res) => {
       res.status(500).json({ message: 'Errore nel caricamento della cover', error });
     }
   });
+
+
+
+  // Commenti
+
+
+
+  // GET /posts/:id/comments
+router.get('/:id/comments', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Post non trovato' });
+    res.json(post.comments);
+  } catch (error) {
+    res.status(500).json({ message: 'Errore nel recupero dei commenti' });
+  }
+});
+
+// GET /posts/:id/comments/:commentId
+router.get('/:id/comments/:commentId', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Post non trovato' });
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ message: 'Commento non trovato' });
+    res.json(comment);
+  } catch (error) {
+    res.status(500).json({ message: 'Errore nel recupero del commento' });
+  }
+});
+
+// POST /posts/:id/comments
+router.post('/:id/comments', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Post non trovato' });
+    post.comments.push(req.body); // req.body: { text, author }
+    await post.save();
+    res.status(201).json(post.comments[post.comments.length - 1]);
+  } catch (error) {
+    res.status(500).json({ message: 'Errore nell\'aggiunta del commento' });
+  }
+});
+
+// PUT /posts/:id/comments/:commentId
+router.put('/:id/comments/:commentId', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Post non trovato' });
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ message: 'Commento non trovato' });
+
+    comment.set(req.body); // req.body può contenere text e/o author
+    await post.save();
+    res.json(comment);
+  } catch (error) {
+    res.status(500).json({ message: 'Errore nell\'aggiornamento del commento' });
+  }
+});
+
+// DELETE /posts/:id/comments/:commentId
+router.delete('/:id/comments/:commentId', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Post non trovato' });
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ message: 'Commento non trovato' });
+
+    comment.remove();
+    await post.save();
+    res.json({ message: 'Commento eliminato' });
+  } catch (error) {
+    res.status(500).json({ message: 'Errore nella cancellazione del commento' });
+  }
+});
+
   
   
 

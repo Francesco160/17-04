@@ -1,8 +1,12 @@
 const { upload } = require('../config/cloudinary');
+const bcrypt = require('bcrypt');
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const Author = require('../models/author');
+
+
+
 
 
 // GET /authors
@@ -34,13 +38,33 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /authors
 router.post('/', async (req, res) => {
   try {
-    const newAuthor = new Author(req.body);
+    const { nome, cognome, email, password, dataDiNascita, avatar } = req.body;
+
+    // Controlla se l'email è già registrata
+    const existingAuthor = await Author.findOne({ email });
+    if (existingAuthor) {
+      return res.status(400).json({ message: 'Email già registrata' });
+    }
+
+    // Cripta la password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Crea un nuovo autore con la password criptata
+    const newAuthor = new Author({
+      nome,
+      cognome,
+      email,
+      password: hashedPassword,
+      dataDiNascita,
+      avatar,
+    });
+
     await newAuthor.save();
     res.status(201).json(newAuthor);
   } catch (error) {
+    console.error(error); // Aggiungi un log dell'errore per facilitare il debug
     res.status(400).json({ message: 'Errore nella creazione dell\'autore' });
   }
 });
@@ -82,6 +106,9 @@ router.patch('/:authorId/avatar', upload.single('avatar'), async (req, res) => {
       res.status(500).json({ message: 'Errore nel caricamento avatar' });
     }
   });
+  
+
+
   
 
 module.exports = router;
