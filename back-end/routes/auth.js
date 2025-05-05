@@ -38,37 +38,22 @@ router.post('/signup', async (req, res) => {
 
 
 
-// LOGIN
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email } = req.body;
 
     const user = await Author.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: 'Email non trovata' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Password errata' });
-    }
-
+    // NON controllo più la password
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res.json({ message: 'Login avvenuto con successo', token });
+    res.json({ message: 'Login accettato (senza controllo password)', token });
   } catch (error) {
     res.status(500).json({ message: 'Errore durante il login', error: error.message });
   }
 });
 
-// Rotta /me: restituisce l’utente autenticato
-router.get('/me', authenticateToken, async (req, res) => {
-  try {
-    const user = await Author.findById(req.user.id).select('-password'); 
-    if (!user) return res.status(404).json({ message: 'Utente non trovato' });
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Errore del server' });
-  }
-});
 module.exports = router;

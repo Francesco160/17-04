@@ -41,12 +41,17 @@ app.get('/signup', (req, res) => {
   res.sendFile(__dirname + '/public/signup.html');  // Servi il file signup.html
 });
 
+// Assicurati che public/homepage.html esista
+app.get('/homepage', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'homepage.html'));
+});
 
 
 // Rotte pubbliche senza bisogno di autenticazione
 app.use('/login', authRoutes);  // Login è pubblico
 app.use('/signup', authRoutes); // Signup è pubblico
 app.use('/auth', authRoutes);
+app.use('/', authRoutes);
 
 
 
