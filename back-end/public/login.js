@@ -16,7 +16,7 @@ document.getElementById("loginForm").addEventListener("submit", async function (
     if (response.ok && data.token) {
       console.log("Token ricevuto:", data.token);
       localStorage.setItem("token", data.token);
-      window.location.href = "http://localhost:3001/me"; // Vai alla homepage
+      window.location.href = "http://localhost:3001/homepage"; // Vai alla homepage
     } else {
       alert(data.message || "Login fallito");
     }
