@@ -1,22 +1,20 @@
-// models/Author.js
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
-const AuthorSchema = new mongoose.Schema({
+const authorSchema = new mongoose.Schema({
   nome: { type: String, required: true },
   cognome: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   dataDiNascita: { type: String, required: true },
-  avatar: { type: String, required: true },
+  avatar: { type: String, required: true }
 });
 
-AuthorSchema.pre('save', async function (next) {
+authorSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
     this.password = await bcrypt.hash(this.password, 10);
   }
   next();
 });
 
-
-module.exports = mongoose.model('Author', AuthorSchema);
+module.exports = mongoose.model('Author', authorSchema);
