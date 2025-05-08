@@ -2,6 +2,12 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Author = require('../models/author');
+const passport = require('passport');
+require('passport'); 
+
+const app = express();
+app.use(passport.initialize());
+
 const authenticateToken = require('../middleware/auth'); // Assicurati di avere il middleware di autenticazione
 
 
@@ -95,6 +101,22 @@ router.get('/me', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Errore del server', error: err.message });
   }
 });
+
+
+// Avvia il login con Google
+router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// Callback dopo il login Google
+router.get('/auth/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: '/login' }),
+  (req, res) => {
+    // Genera un JWT e lo manda al frontend
+    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    
+    // Invia il token al frontend, o reindirizza con il token come query param
+    res.redirect(`http://localhost:3000?token=${token}`);
+  }
+);
 
 
 module.exports = router;
