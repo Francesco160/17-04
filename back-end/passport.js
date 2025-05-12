@@ -1,9 +1,12 @@
+
+require('dotenv').config(); 
+
+
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const Author = require('./models/author'); 
 
 
-require('dotenv').config(); 
 
 
 

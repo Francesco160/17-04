@@ -7,6 +7,8 @@ const blogPost = require('../models/blogPost');
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 
+const authenticateToken = require('../middleware/auth');
+
 
 
 
@@ -41,14 +43,23 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /posts
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
-    const newPost = new Post(req.body);
-    await newPost.save();
-    res.status(201).json(newPost);
-  } catch (error) {
-    res.status(400).json({ message: 'Errore nella creazione del post' });
+    const post = new Post({ ...req.body, author: req.user._id });
+    await post.save();
+
+    const author = await Author.findById(req.user._id);
+
+    // Invia email di conferma pubblicazione
+    await sendEmail(
+      author.email,
+      'Hai pubblicato un nuovo post!',
+      `<h2>Il tuo nuovo post "${post.title}" è stato pubblicato con successo!</h2>`
+    );
+
+    res.status(201).json(post);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

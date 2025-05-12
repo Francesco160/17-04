@@ -3,12 +3,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Author = require('../models/author');
 const passport = require('passport');
+const sendEmail = require('../sendgrid');
 require('passport'); 
 
 const app = express();
 app.use(passport.initialize());
 
-const authenticateToken = require('../middleware/auth'); // Assicurati di avere il middleware di autenticazione
+const authenticateToken = require('../middleware/auth');
 
 
 const router = express.Router();
@@ -17,29 +18,37 @@ router.post('/signup', async (req, res) => {
   try {
     const { nome, cognome, email, password, dataDiNascita, avatar } = req.body;
 
+    // Verifica se l'email è già registrata
     const existingUser = await Author.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Email già registrata' });
     }
 
-    // Cripta SOLO qui
+    // Cripta la password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // NON fare hash qui, lo fa lo schema!
-const newAuthor = new Author({
-  nome,
-  cognome,
-  email,
-  password, 
-  dataDiNascita,
-  avatar,
-});
-
+    // Crea il nuovo autore
+    const newAuthor = new Author({
+      nome,
+      cognome,
+      email,
+      password: hashedPassword,
+      dataDiNascita,
+      avatar,
+    });
 
     await newAuthor.save();
 
+    // Invia email di benvenuto
+    await sendEmail(
+      newAuthor.email,
+      'Benvenuto su Strive Blog!',
+      `<h1>Ciao ${newAuthor.nome}!</h1><p>Grazie per esserti registrato su Strive Blog.</p>`
+    );
+
     res.status(201).json({ message: 'Utente registrato con successo' });
   } catch (error) {
+    console.error('Errore registrazione:', error);
     res.status(500).json({ message: 'Errore durante la registrazione', error: error.message });
   }
 });
